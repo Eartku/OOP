@@ -6,18 +6,27 @@ public class Book {
     private String title;
     private final ArrayList<String> categories;
     private final ArrayList<Author> authors;
-    private String publicationyear;
+    private String publicationYear;
     private int quantity;
     private static int count=0;
-    public Book(String id,String title,String publicationyear,int quantity)
+    public Book(String title,String publicationYear,int quantity)
+    {
+        this.title=title;
+        categories=new ArrayList<>();
+        authors=new ArrayList<>();
+        this.publicationYear=publicationYear;
+        this.quantity=quantity;
+        count++;
+        this.id="B."+count;
+    }
+    public Book(String id,String title,String publicationYear,int quantity)
     {
         this.id=id;
         this.title=title;
         categories=new ArrayList<>();
         authors=new ArrayList<>();
-        this.publicationyear=publicationyear;
+        this.publicationYear=publicationYear;
         this.quantity=quantity;
-        count++;
     }
     public String getId()
     {
@@ -42,7 +51,7 @@ public class Book {
     }
     public String getPublicationYear()
     {
-        return publicationyear;
+        return publicationYear;
     }
     public int getQuantity()
     {
@@ -70,7 +79,7 @@ public class Book {
     }
     public void setPublicationYear(String publicationYear)
     {
-        this.publicationyear=publicationYear;
+        this.publicationYear=publicationYear;
     }
     public void showInfo()
     {
