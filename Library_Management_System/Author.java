@@ -3,7 +3,7 @@ import java.time.LocalDate;
 public class Author extends Person {
     private String penName;
     private static int count=0;
-    public Author(String id,String name,int month,int year,int dayOfMonth,String penName,String Email,String phoneNumber)
+    public Author(String id,String name,int year,int month,int dayOfMonth,String penName,String Email,String phoneNumber)
     {
         super(id, name, year, month, dayOfMonth, phoneNumber, Email);
         this.penName=penName;

@@ -14,7 +14,7 @@ public class Book {
         this.id=id;
         this.title=title;
         categories=new ArrayList<>();
-        authors=new ArrayList();
+        authors=new ArrayList<>();
         this.publicationyear=publicationyear;
         this.quantity=quantity;
         count++;
@@ -22,6 +22,11 @@ public class Book {
     public String getId()
     {
         return id;
+    }
+    public void setId()
+    {
+        String bookId="B"+Book.getTotal();
+        this.id=bookId;
     }
     public String getTitle()
     {
