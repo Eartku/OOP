@@ -5,4 +5,5 @@ public interface I_Management<T> {
     void editProfile(String id);
     void show(String id);
     void showAll();
+    void save();
 }

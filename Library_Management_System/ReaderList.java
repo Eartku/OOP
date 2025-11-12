@@ -1,12 +1,22 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.TreeMap;
 
 public class ReaderList implements I_Management<Reader> {
-    private final TreeMap<String, Reader> readers;
+    private final TreeMap<String, Reader> readers = new TreeMap<>();
+    
+    private void TranstoMap(ArrayList<Reader> load){
+        readers.clear();
+        for(Reader k: load){
+            readers.put(k.getId(), k);
+        }
+    }
     
     public ReaderList() {
-        readers = new TreeMap<>();
+        TranstoMap(FileHandler.loadReaders());
     }
     
     @Override
@@ -184,4 +194,25 @@ public class ReaderList implements I_Management<Reader> {
     public TreeMap<String, Reader> getReadersMap() {
         return new TreeMap<>(readers);
     }
+    @Override
+   public void save() {
+    String filePath = System.getProperty("user.dir") + "/Library_Management_System/readers.txt";
+
+    try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
+        for (Reader reader : readers.values()) {
+            writer.println(reader.getId() + "|" 
+                    + reader.getName() + "|" 
+                    + reader.getDate() + "|" 
+                    + reader.getPhoneNumber() + "|" 
+                    + reader.getEmail() + "|" 
+                    + reader.getAddress());
+        }
+        System.out.println("Readers saved successfully to " + filePath);
+    } catch (IOException e) {
+        System.out.println("Error saving readers: " + e.getMessage());
+    }
+}
+
+
+    
 }

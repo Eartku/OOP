@@ -1,24 +1,21 @@
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 
 public class LibraryManagementSystem {
     private BookList bookList;
     private AuthorList authorList;
     private ReaderList readerList;
-    private ArrayList<BorrowSlip> borrowSlips;
-    
+    private BorrowSlipList borrowSlipsList;
+
     public LibraryManagementSystem() {
         initializeSystem();
     }
-    
+
     private void initializeSystem() {
-        this.bookList = new BookList();
-        this.authorList = new AuthorList();
-        this.readerList = new ReaderList();
-        this.borrowSlips = new ArrayList<>();
-        
-        loadAllData();
-        
+        bookList = new BookList();
+        authorList = new AuthorList();
+        readerList = new ReaderList();
+        borrowSlipsList = new BorrowSlipList(bookList, readerList.getReadersMap());
+
         System.out.println("\n============================================================");
         System.out.println("=== LIBRARY MANAGEMENT SYSTEM INITIALIZED ===");
         System.out.println("============================================================");
@@ -26,132 +23,24 @@ public class LibraryManagementSystem {
         System.out.println("Loaded: " + authorList.getTotalAuthors() + " authors");
         System.out.println("Loaded: " + readerList.getTotalReaders() + " readers");
         System.out.println("Loaded: " + bookList.getBookCopiesMap().size() + " book copies");
-        System.out.println("Loaded: " + borrowSlips.size() + " borrow slips");
+        System.out.println("Loaded: " + borrowSlipsList.getSlips().size() + " borrow slips");
         System.out.println("============================================================");
     }
-    
-    private void loadAllData() {
-        System.out.println("INITIALIZING LIBRARY MANAGEMENT SYSTEM...");
-        
-        ArrayList<Book> loadedBooks = FileHandler.loadBooks();
-        ArrayList<Author> loadedAuthors = FileHandler.loadAuthors();
-        
-        if (loadedBooks.isEmpty()) {
-            System.out.println("Warning: No books loaded. Starting with empty book list.");
-        }
-        if (loadedAuthors.isEmpty()) {
-            System.out.println("Warning: No authors loaded. Starting with empty author list.");
-        }
-        
-        FileHandler.linkAuthorsToBooks(loadedBooks, loadedAuthors);
-        
-        ArrayList<Reader> loadedReaders = FileHandler.loadReaders();
-        ArrayList<BookCopy> loadedCopies = FileHandler.loadBookCopies(loadedBooks);
-        ArrayList<BorrowSlip> loadedSlips = FileHandler.loadBorrowSlips(loadedReaders, loadedCopies);
-        
-        addDataToSystem(loadedBooks, loadedAuthors, loadedReaders, loadedCopies, loadedSlips);
-        
-        updateSystemCounters(loadedBooks, loadedAuthors, loadedReaders, loadedCopies, loadedSlips);
-        validateSystemData();
-    }
-    
-    private void addDataToSystem(ArrayList<Book> books, ArrayList<Author> authors, 
-                               ArrayList<Reader> readers, ArrayList<BookCopy> copies,
-                               ArrayList<BorrowSlip> slips) {
-        
-        for (Author author : authors) {
-            try {
-                authorList.getAuthorsMap().put(author.getId(), author);
-            } catch (Exception e) {
-                System.out.println("Error adding author: " + e.getMessage());
-            }
-        }
-        
-        for (Book book : books) {
-            try {
-                bookList.getBooksMap().put(book.getId(), book);
-            } catch (Exception e) {
-                System.out.println("Error adding book: " + e.getMessage());
-            }
-        }
-        
-        for (Book book : books) {
-            book.linkAuthors(authors);
-        }
-        
-        for (Reader reader : readers) {
-            try {
-                readerList.getReadersMap().put(reader.getId(), reader);
-            } catch (Exception e) {
-                System.out.println("Error adding reader: " + e.getMessage());
-            }
-        }
-        
-        for (BookCopy copy : copies) {
-            try {
-                bookList.getBookCopiesMap().put(copy.getCopyId(), copy);
-            } catch (Exception e) {
-                System.out.println("Error adding book copy: " + e.getMessage());
-            }
-        }
-        
-        this.borrowSlips.clear();
-        this.borrowSlips.addAll(slips);
-    }
-    
-    private void updateSystemCounters(ArrayList<Book> books, ArrayList<Author> authors,
-                                    ArrayList<Reader> readers, ArrayList<BookCopy> copies,
-                                    ArrayList<BorrowSlip> slips) {
-        
-        Book.updateCountFromFile(books);
-        Author.updateCountFromFile(authors);
-        
-        try {
-            Reader.class.getMethod("updateCountFromFile", ArrayList.class).invoke(null, readers);
-        } catch (Exception e) {
-        }
-        
-        try {
-            BookCopy.class.getMethod("updateCountFromFile", ArrayList.class).invoke(null, copies);
-        } catch (Exception e) {
-        }
-        
-        try {
-            BorrowSlip.class.getMethod("updateCountFromFile", ArrayList.class).invoke(null, slips);
-        } catch (Exception e) {
-        }
-    }
-    
-    private void validateSystemData() {
-        ArrayList<Book> books = new ArrayList<>(bookList.getBooksMap().values());
-        ArrayList<Author> authors = new ArrayList<>(authorList.getAuthorsMap().values());
-        ArrayList<Reader> readers = new ArrayList<>(readerList.getReadersMap().values());
-        ArrayList<BookCopy> copies = new ArrayList<>(bookList.getBookCopiesMap().values());
-        
-        FileHandler.validateDataConsistency(books, authors, readers, copies, borrowSlips);
-    }
-    
+
+    // Save tất cả dữ liệu
     public void saveAllData() {
         System.out.println("\nSAVING ALL DATA TO FILES...");
-        
         try {
-            ArrayList<Book> books = new ArrayList<>(bookList.getBooksMap().values());
-            ArrayList<Author> authors = new ArrayList<>(authorList.getAuthorsMap().values());
-            ArrayList<Reader> readers = new ArrayList<>(readerList.getReadersMap().values());
-            ArrayList<BookCopy> copies = new ArrayList<>(bookList.getBookCopiesMap().values());
-            
-            FileHandler.saveBooks(books);
-            FileHandler.saveAuthors(authors);
-            FileHandler.saveReaders(readers);
-            FileHandler.saveBookCopies(copies);
-            FileHandler.saveBorrowSlips(borrowSlips);
-            
+            bookList.save();
+            authorList.save();
+            readerList.save();
+            borrowSlipsList.save();
             System.out.println("All data saved successfully!");
         } catch (Exception e) {
             System.out.println("Error saving data: " + e.getMessage());
         }
     }
-    
+
     public void createBackup() {
         System.out.println("\nCREATING SYSTEM BACKUP...");
         try {
@@ -162,11 +51,11 @@ public class LibraryManagementSystem {
             System.out.println("Error creating backup: " + e.getMessage());
         }
     }
-    
+
+    // =================== MAIN MENU ===================
     public void showMainMenu() {
         Scanner sc = new Scanner(System.in);
         int choice;
-        
         do {
             System.out.println("\n========================================");
             System.out.println("=== LIBRARY MANAGEMENT SYSTEM ===");
@@ -179,11 +68,10 @@ public class LibraryManagementSystem {
             System.out.println("6. Data Management");
             System.out.println("0. Exit");
             System.out.print("Select option: ");
-            
+
             try {
                 choice = sc.nextInt();
                 sc.nextLine();
-                
                 switch (choice) {
                     case 1 -> showBookManagementMenu(sc);
                     case 2 -> showAuthorManagementMenu(sc);
@@ -198,16 +86,16 @@ public class LibraryManagementSystem {
                     }
                     default -> System.out.println("Invalid option! Please try again.");
                 }
-            } catch (Exception e) {
+            } catch (InputMismatchException e) {
                 System.out.println("Error: Please enter a valid number");
                 sc.nextLine();
                 choice = -1;
             }
         } while (choice != 0);
-        
         sc.close();
     }
-    
+
+    // =================== BOOK MENU ===================
     private void showBookManagementMenu(Scanner sc) {
         int choice;
         do {
@@ -223,18 +111,16 @@ public class LibraryManagementSystem {
             System.out.println("7. Show all book copies");
             System.out.println("0. Back to main menu");
             System.out.print("Select option: ");
-            
+
             try {
                 choice = sc.nextInt();
                 sc.nextLine();
-                
                 switch (choice) {
                     case 1 -> {
                         System.out.print("Enter book title: ");
                         String title = sc.nextLine();
                         System.out.print("Enter publication year: ");
                         String year = sc.nextLine();
-                        
                         try {
                             Book book = new Book(title, year);
                             bookList.add(book);
@@ -268,14 +154,15 @@ public class LibraryManagementSystem {
                     case 0 -> System.out.println("Returning to main menu...");
                     default -> System.out.println("Invalid option!");
                 }
-            } catch (Exception e) {
+            } catch (InputMismatchException e) {
                 System.out.println("Error: Please enter a valid number");
                 sc.nextLine();
                 choice = -1;
             }
         } while (choice != 0);
     }
-    
+
+    // =================== AUTHOR MENU ===================
     private void showAuthorManagementMenu(Scanner sc) {
         int choice;
         do {
@@ -289,11 +176,10 @@ public class LibraryManagementSystem {
             System.out.println("5. Show all authors");
             System.out.println("0. Back to main menu");
             System.out.print("Select option: ");
-            
+
             try {
                 choice = sc.nextInt();
                 sc.nextLine();
-                
                 switch (choice) {
                     case 1 -> {
                         System.out.print("Enter author name: ");
@@ -311,7 +197,7 @@ public class LibraryManagementSystem {
                         String email = sc.nextLine();
                         System.out.print("Enter phone number: ");
                         String phone = sc.nextLine();
-                        
+
                         try {
                             Author author = new Author(name, year, month, day, penName, email, phone);
                             authorList.add(author);
@@ -339,14 +225,15 @@ public class LibraryManagementSystem {
                     case 0 -> System.out.println("Returning to main menu...");
                     default -> System.out.println("Invalid option!");
                 }
-            } catch (Exception e) {
+            } catch (InputMismatchException e) {
                 System.out.println("Error: Please enter a valid number");
                 sc.nextLine();
                 choice = -1;
             }
         } while (choice != 0);
     }
-    
+
+    // =================== READER MENU ===================
     private void showReaderManagementMenu(Scanner sc) {
         int choice;
         do {
@@ -360,11 +247,10 @@ public class LibraryManagementSystem {
             System.out.println("5. Show all readers");
             System.out.println("0. Back to main menu");
             System.out.print("Select option: ");
-            
+
             try {
                 choice = sc.nextInt();
                 sc.nextLine();
-                
                 switch (choice) {
                     case 1 -> {
                         System.out.print("Enter reader name: ");
@@ -382,7 +268,7 @@ public class LibraryManagementSystem {
                         String email = sc.nextLine();
                         System.out.print("Enter address: ");
                         String address = sc.nextLine();
-                        
+
                         try {
                             Reader reader = new Reader(name, year, month, day, phone, email, address);
                             readerList.add(reader);
@@ -410,14 +296,15 @@ public class LibraryManagementSystem {
                     case 0 -> System.out.println("Returning to main menu...");
                     default -> System.out.println("Invalid option!");
                 }
-            } catch (Exception e) {
+            } catch (InputMismatchException e) {
                 System.out.println("Error: Please enter a valid number");
                 sc.nextLine();
                 choice = -1;
             }
         } while (choice != 0);
     }
-    
+
+    // =================== BORROW/RETURN MENU ===================
     private void showBorrowManagementMenu(Scanner sc) {
         int choice;
         do {
@@ -431,16 +318,16 @@ public class LibraryManagementSystem {
             System.out.println("5. Show all borrow slips");
             System.out.println("0. Back to main menu");
             System.out.print("Select option: ");
-            
+
             try {
                 choice = sc.nextInt();
                 sc.nextLine();
-                
                 switch (choice) {
                     case 1 -> {
                         System.out.print("Enter reader ID: ");
                         String readerId = sc.nextLine();
                         Reader reader = readerList.search(readerId);
+
                         if (reader != null) {
                             System.out.print("Enter borrow year: ");
                             int year = sc.nextInt();
@@ -449,14 +336,10 @@ public class LibraryManagementSystem {
                             System.out.print("Enter borrow day: ");
                             int day = sc.nextInt();
                             sc.nextLine();
-                            
-                            try {
-                                BorrowSlip slip = new BorrowSlip(year, month, day, reader);
-                                borrowSlips.add(slip);
-                                System.out.println("Borrow slip created: " + slip.getBorrowId());
-                            } catch (Exception e) {
-                                System.out.println("Error: " + e.getMessage());
-                            }
+
+                            BorrowSlip slip = new BorrowSlip(year, month, day, reader);
+                            borrowSlipsList.add(slip);
+                            System.out.println("Borrow slip created: " + slip.getBorrowId());
                         } else {
                             System.out.println("Reader not found!");
                         }
@@ -464,11 +347,11 @@ public class LibraryManagementSystem {
                     case 2 -> {
                         System.out.print("Enter borrow slip ID: ");
                         String slipId = sc.nextLine();
-                        BorrowSlip slip = findBorrowSlip(slipId);
+                        BorrowSlip slip = borrowSlipsList.search(slipId);
                         if (slip != null) {
                             System.out.print("Enter book copy ID to borrow: ");
                             String copyId = sc.nextLine();
-                            slip.addBookCopy(bookList, copyId);
+                            slip.addBookCopyById(bookList, copyId);
                         } else {
                             System.out.println("Borrow slip not found!");
                         }
@@ -476,11 +359,15 @@ public class LibraryManagementSystem {
                     case 3 -> {
                         System.out.print("Enter borrow slip ID: ");
                         String slipId = sc.nextLine();
-                        BorrowSlip slip = findBorrowSlip(slipId);
+                        BorrowSlip slip = borrowSlipsList.search(slipId);
                         if (slip != null) {
                             System.out.print("Enter book copy ID to return: ");
                             String copyId = sc.nextLine();
-                            slip.returnBookCopy(bookList, copyId);
+                            if (borrowSlipsList.returnBook(slip, bookList, copyId)) {
+                                System.out.println("Book copy returned successfully.");
+                            } else {
+                                System.out.println("Book copy not found in this borrow slip.");
+                            }
                         } else {
                             System.out.println("Borrow slip not found!");
                         }
@@ -488,25 +375,26 @@ public class LibraryManagementSystem {
                     case 4 -> {
                         System.out.print("Enter borrow slip ID: ");
                         String slipId = sc.nextLine();
-                        BorrowSlip slip = findBorrowSlip(slipId);
+                        BorrowSlip slip = borrowSlipsList.search(slipId);
                         if (slip != null) {
                             slip.showInfo(bookList);
                         } else {
                             System.out.println("Borrow slip not found!");
                         }
                     }
-                    case 5 -> showAllBorrowSlips();
+                    case 5 -> borrowSlipsList.showAll();
                     case 0 -> System.out.println("Returning to main menu...");
-                    default -> System.out.println("Invalid option!");
+                    default -> System.out.println("Invalid option! Please try again.");
                 }
-            } catch (Exception e) {
+            } catch (InputMismatchException e) {
                 System.out.println("Error: Please enter a valid number");
                 sc.nextLine();
                 choice = -1;
             }
         } while (choice != 0);
     }
-    
+
+    // =================== REPORT MENU ===================
     private void showReportsMenu(Scanner sc) {
         int choice;
         do {
@@ -519,10 +407,8 @@ public class LibraryManagementSystem {
             System.out.println("4. Reader activity report");
             System.out.println("0. Back to main menu");
             System.out.print("Select option: ");
-            
             choice = sc.nextInt();
             sc.nextLine();
-            
             switch (choice) {
                 case 1 -> showLibraryStatistics();
                 case 2 -> showOverdueReport();
@@ -533,7 +419,8 @@ public class LibraryManagementSystem {
             }
         } while (choice != 0);
     }
-    
+
+    // =================== DATA MENU ===================
     private void showDataManagementMenu(Scanner sc) {
         int choice;
         do {
@@ -542,95 +429,51 @@ public class LibraryManagementSystem {
             System.out.println("==============================");
             System.out.println("1. Save all data");
             System.out.println("2. Create backup");
-            System.out.println("3. Validate data consistency");
-            System.out.println("4. Reload all data");
+            System.out.println("3. Reload all data");
             System.out.println("0. Back to main menu");
             System.out.print("Select option: ");
-            
             choice = sc.nextInt();
             sc.nextLine();
-            
             switch (choice) {
                 case 1 -> saveAllData();
                 case 2 -> createBackup();
-                case 3 -> {
-                    ArrayList<Book> books = new ArrayList<>(bookList.getBooksMap().values());
-                    ArrayList<Author> authors = new ArrayList<>(authorList.getAuthorsMap().values());
-                    ArrayList<Reader> readers = new ArrayList<>(readerList.getReadersMap().values());
-                    ArrayList<BookCopy> copies = new ArrayList<>(bookList.getBookCopiesMap().values());
-                    
-                    boolean consistent = FileHandler.validateDataConsistency(books, authors, readers, copies, borrowSlips);
-                    if (consistent) {
-                        System.out.println("All data is consistent!");
-                    } else {
-                        System.out.println("Data consistency issues found!");
-                    }
-                }
-                case 4 -> {
-                    System.out.println("Reloading all data from files...");
-                    initializeSystem();
-                }
+                case 3 -> initializeSystem();
                 case 0 -> System.out.println("Returning to main menu...");
                 default -> System.out.println("Invalid option!");
             }
         } while (choice != 0);
     }
-    
-    private BorrowSlip findBorrowSlip(String slipId) {
-        for (BorrowSlip slip : borrowSlips) {
-            if (slip.getBorrowId().equals(slipId)) {
-                return slip;
-            }
-        }
-        return null;
-    }
-    
-    private void showAllBorrowSlips() {
-        if (borrowSlips.isEmpty()) {
-            System.out.println("No borrow slips available.");
-            return;
-        }
-        
-        System.out.println("\n=== ALL BORROW SLIPS ===");
-        for (BorrowSlip slip : borrowSlips) {
-            slip.showInfo(bookList);
-        }
-    }
-    
+
+    // =================== STATISTICS ===================
     private void showLibraryStatistics() {
         System.out.println("\n=== LIBRARY STATISTICS ===");
         System.out.println("Total Books: " + bookList.getTotalBooks());
         System.out.println("Total Book Copies: " + bookList.getTotalCopies());
         System.out.println("Total Authors: " + authorList.getTotalAuthors());
         System.out.println("Total Readers: " + readerList.getTotalReaders());
-        System.out.println("Active Borrow Slips: " + borrowSlips.size());
-        
-        int totalBorrowedBooks = 0;
-        int overdueCount = 0;
-        for (BorrowSlip slip : borrowSlips) {
+        System.out.println("Active Borrow Slips: " + borrowSlipsList.getSlips().size());
+
+        int totalBorrowedBooks = 0, overdueCount = 0;
+        for (BorrowSlip slip : borrowSlipsList.getSlips()) {
             totalBorrowedBooks += slip.getBookCopyIds().size();
-            if (slip.isOverdue()) {
-                overdueCount++;
-            }
+            if (slip.isOverdue()) overdueCount++;
         }
-        
         System.out.println("Currently Borrowed Books: " + totalBorrowedBooks);
         System.out.println("Overdue Borrow Slips: " + overdueCount);
-        
+
         int totalCopies = bookList.getTotalCopies();
         if (totalCopies > 0) {
             double availabilityRate = ((double) (totalCopies - totalBorrowedBooks) / totalCopies) * 100;
             System.out.println("Book Availability Rate: " + String.format("%.2f", availabilityRate) + "%");
         }
     }
-    
+
     private void showOverdueReport() {
         System.out.println("\n=== OVERDUE BOOKS REPORT ===");
-        boolean foundOverdue = false;
-        
-        for (BorrowSlip slip : borrowSlips) {
+        boolean found = false;
+        for (BorrowSlip slip : borrowSlipsList.getSlips()) {
             if (slip.isOverdue()) {
-                foundOverdue = true;
+                found = true;
                 System.out.println("Borrow Slip: " + slip.getBorrowId());
                 System.out.println("Reader: " + slip.getReader().getName());
                 System.out.println("Days Overdue: " + slip.getDaysOverdue());
@@ -638,50 +481,36 @@ public class LibraryManagementSystem {
                 System.out.println("---");
             }
         }
-        
-        if (!foundOverdue) {
-            System.out.println("No overdue books found.");
-        }
+        if (!found) System.out.println("No overdue books found.");
     }
-    
+
     private void showAvailableBooksReport() {
         System.out.println("\n=== AVAILABLE BOOKS REPORT ===");
-        int availableCount = 0;
-        
+        int count = 0;
         for (Book book : bookList.getBooksMap().values()) {
-            int availableCopies = bookList.getAvailableCopiesCount(book.getId());
-            if (availableCopies > 0) {
-                System.out.println("Book: " + book.getTitle());
-                System.out.println("Available Copies: " + availableCopies);
-                System.out.println("---");
-                availableCount++;
+            int available = bookList.getAvailableCopiesCount(book.getId());
+            if (available > 0) {
+                System.out.println("Book: " + book.getTitle() + " | Available Copies: " + available);
+                count++;
             }
         }
-        
-        if (availableCount == 0) {
-            System.out.println("No available books found.");
-        } else {
-            System.out.println("Total books with available copies: " + availableCount);
-        }
+        if (count == 0) System.out.println("No available books found.");
+        else System.out.println("Total books with available copies: " + count);
     }
-    
+
     private void showReaderActivityReport() {
         System.out.println("\n=== READER ACTIVITY REPORT ===");
-        
         for (Reader reader : readerList.getReadersMap().values()) {
-            int readerBorrowCount = 0;
-            for (BorrowSlip slip : borrowSlips) {
+            int total = 0;
+            for (BorrowSlip slip : borrowSlipsList.getSlips()) {
                 if (slip.getReader().getId().equals(reader.getId())) {
-                    readerBorrowCount += slip.getBookCopyIds().size();
+                    total += slip.getBookCopyIds().size();
                 }
             }
-            
-            System.out.println("Reader: " + reader.getName());
-            System.out.println("Total Books Borrowed: " + readerBorrowCount);
-            System.out.println("---");
+            System.out.println("Reader: " + reader.getName() + " | Total Books Borrowed: " + total);
         }
     }
-    
+
     public static void main(String[] args) {
         System.out.println("Starting Library Management System...");
         LibraryManagementSystem system = new LibraryManagementSystem();

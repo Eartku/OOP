@@ -66,13 +66,10 @@ public abstract class Person {
             }
             
             Period age = Period.between(date, now);
-            if (age.getYears() < 5) {
-                throw new IllegalArgumentException("Person must be at least 5 years old");
+            if (age.getYears() < 12) {
+                throw new IllegalArgumentException("Person must be at least 12 years old");
             }
             
-            if (age.getYears() > 120) {
-                throw new IllegalArgumentException("Person cannot be older than 120 years");
-            }
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid date: " + e.getMessage());
         }

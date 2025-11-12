@@ -3,50 +3,22 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class FileHandler {
-    private static final String BOOKS_FILE = "books.txt";
-    private static final String AUTHORS_FILE = "authors.txt";
-    private static final String READERS_FILE = "readers.txt";
-    private static final String BOOK_COPIES_FILE = "book_copies.txt";
-    private static final String BORROW_SLIPS_FILE = "borrow_slips.txt";
+    private static final String BASE_PATH = System.getProperty("user.dir")+"/Library_Management_System/";
+
+    private static final String BOOKS_FILE = BASE_PATH + "books.txt";
+    private static final String AUTHORS_FILE = BASE_PATH + "authors.txt";
+    private static final String READERS_FILE = BASE_PATH + "readers.txt";
+    private static final String BOOK_COPIES_FILE = BASE_PATH + "book_copies.txt";
+    private static final String BORROW_SLIPS_FILE = BASE_PATH + "borrow_slips.txt";
+
+
     
-    public static void saveBooks(ArrayList<Book> books) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(BOOKS_FILE))) {
-            for (Book book : books) {
-                writer.println(book.getId() + "|" + book.getTitle() + "|" + book.getPublicationYear());
-                
-                ArrayList<String> categories = book.getCategories();
-                if (!categories.isEmpty()) {
-                    writer.print("CATEGORIES:");
-                    for (int i = 0; i < categories.size(); i++) {
-                        writer.print(categories.get(i));
-                        if (i < categories.size() - 1) writer.print(",");
-                    }
-                    writer.println();
-                }
-                
-                ArrayList<Author> authors = book.getAuthors();
-                if (!authors.isEmpty()) {
-                    writer.print("AUTHORS:");
-                    for (int i = 0; i < authors.size(); i++) {
-                        writer.print(authors.get(i).getId());
-                        if (i < authors.size() - 1) writer.print(",");
-                    }
-                    writer.println();
-                }
-                writer.println("---");
-            }
-            System.out.println("Books saved successfully to " + BOOKS_FILE);
-        } catch (IOException e) {
-            System.out.println("Error saving books: " + e.getMessage());
-        }
-    }
-    
-    public static ArrayList<Book> loadBooks() {
+    public static ArrayList<Book> loadBooks() { //TODO: trả về Array List
         ArrayList<Book> books = new ArrayList<>();
         File file = new File(BOOKS_FILE);
         
         if (!file.exists()) {
-            System.out.println("Books file not found: " + BOOKS_FILE);
+            System.out.println("Looking for books file at: " + file.getAbsolutePath());
             return books;
         }
         
@@ -123,18 +95,6 @@ public class FileHandler {
         return books;
     }
     
-    public static void saveAuthors(ArrayList<Author> authors) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(AUTHORS_FILE))) {
-            for (Author author : authors) {
-                writer.println(author.getId() + "|" + author.getName() + "|" + 
-                             author.getDate() + "|" + author.getPenName() + "|" + 
-                             author.getEmail() + "|" + author.getPhoneNumber());
-            }
-            System.out.println("Authors saved successfully to " + AUTHORS_FILE);
-        } catch (IOException e) {
-            System.out.println("Error saving authors: " + e.getMessage());
-        }
-    }
     
     public static ArrayList<Author> loadAuthors() {
         ArrayList<Author> authors = new ArrayList<>();
@@ -488,4 +448,6 @@ public class FileHandler {
         
         return consistent;
     }
+
+    
 }

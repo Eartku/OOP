@@ -34,6 +34,9 @@ public class BorrowSlip {
         this.dueDate = this.borrowDate.plusDays(BORROW_PERIOD_DAYS);
         this.reader = reader;
     }
+
+    public BorrowSlip() {
+    }
     
     private void validateReader(Reader reader) {
         if (reader == null) {

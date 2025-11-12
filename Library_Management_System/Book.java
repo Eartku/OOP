@@ -191,4 +191,19 @@ public class Book {
         System.out.println("Publication year: " + getPublicationYear());
         System.out.println();
     }
+    // Trong class Book
+    private int copyCount = 0;
+
+    public void incrementCopyCount() {
+        copyCount++;
+    }
+
+    public void setCopyCount(int count) {
+        this.copyCount = count;
+    }
+
+    public int getCopyCount() {
+        return copyCount;
+    }
+
 }

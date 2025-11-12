@@ -1,12 +1,20 @@
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
 
 public class AuthorList implements I_Management<Author> {
-    private final TreeMap<String, Author> authors;
+    private final Map<String, Author> authors = new TreeMap<>();
+
+    private void TranstoMap(ArrayList<Author> load){
+        authors.clear();
+        for(Author k: load){
+            authors.put(k.getId(), k);
+        }
+    }
     
     public AuthorList() {
-        authors = new TreeMap<>();
+        TranstoMap(FileHandler.loadAuthors());
     }
     
     @Override
@@ -184,4 +192,23 @@ public class AuthorList implements I_Management<Author> {
     public TreeMap<String, Author> getAuthorsMap() {
         return new TreeMap<>(authors);
     }
+
+    public void save() {
+    String filePath = System.getProperty("user.dir") + "/Library_Management_System/authors.txt";
+
+    try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
+        for (Author author : authors.values()) {
+            writer.println(author.getId() + "|" 
+                    + author.getName() + "|" 
+                    + author.getDate() + "|" 
+                    + author.getPenName() + "|" 
+                    + author.getEmail() + "|" 
+                    + author.getPhoneNumber());
+        }
+        System.out.println("Authors saved successfully to " + filePath);
+    } catch (IOException e) {
+        System.out.println("Error saving authors: " + e.getMessage());
+    }
+}
+
 }

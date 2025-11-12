@@ -1,14 +1,30 @@
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
 
 public class BookList implements I_Management<Book> {
-    private TreeMap<String, Book> books;
-    private TreeMap<String, BookCopy> bookCopies;
+    private final Map<String, Book> books = new TreeMap<>();
+    private final Map<String, BookCopy> bookCopies = new TreeMap<>();
+
+    private void TranstoMap(ArrayList<Book> load){
+    books.clear();           // Chỉ clear books
+    for(Book k: load){
+        books.put(k.getId(), k);
+    }
+    }
+
+private void TranstoMap2(ArrayList<BookCopy> load){
+    bookCopies.clear();      // Chỉ clear bookCopies
+    for(BookCopy k: load){
+        bookCopies.put(k.getCopyId(), k);
+    }
+}
+
     
     public BookList() {
-        books = new TreeMap<>();
-        bookCopies = new TreeMap<>();
+        TranstoMap(FileHandler.loadBooks());
+        TranstoMap2(FileHandler.loadBookCopies(FileHandler.loadBooks()));
     }
     
     @Override
@@ -284,4 +300,58 @@ public class BookList implements I_Management<Book> {
     public TreeMap<String, BookCopy> getBookCopiesMap() {
         return new TreeMap<>(bookCopies);
     }
+    // Lưu toàn bộ sách và bản sao
+    @Override
+    public void save() {
+        saveBooks();
+        saveBookCopies(bookCopies);
+    }
+
+    // Lưu sách
+    private void saveBooks() {
+        String filePath = System.getProperty("user.dir") + "/Library_Management_System/books.txt";
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
+            for (Book book : books.values()) {
+                writer.println(book.getId() + "|" + book.getTitle() + "|" + book.getPublicationYear());
+
+                ArrayList<String> categories = book.getCategories();
+                if (!categories.isEmpty()) {
+                    writer.print("CATEGORIES:" + String.join(",", categories));
+                    writer.println();
+                }
+
+                ArrayList<Author> authors = book.getAuthors();
+                if (!authors.isEmpty()) {
+                    List<String> authorIds = new ArrayList<>();
+                    for (Author a : authors) authorIds.add(a.getId());
+                    writer.print("AUTHORS:" + String.join(",", authorIds));
+                    writer.println();
+                }
+
+                writer.println("---");
+            }
+
+            System.out.println("Books saved successfully to " + filePath);
+        } catch (IOException e) {
+            System.out.println("Error saving books: " + e.getMessage());
+        }
+    }
+
+    // Lưu bản sao từ Map
+    public static void saveBookCopies(Map<String, BookCopy> bookCopies) {
+        final String BOOK_COPIES_FILE = System.getProperty("user.dir") + "/Library_Management_System/book_copies.txt";
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(BOOK_COPIES_FILE))) {
+            for (BookCopy copy : bookCopies.values()) {
+                writer.println(copy.getCopyId() + "|" + copy.getBook().getId() + "|" + copy.isAvailable());
+            }
+            System.out.println("Book copies saved successfully to " + BOOK_COPIES_FILE);
+        } catch (IOException e) {
+            System.out.println("Error saving book copies: " + e.getMessage());
+        }
+    }
+
+    
+
 }

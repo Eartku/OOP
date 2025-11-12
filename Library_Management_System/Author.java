@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-public class Author extends Person {
+public final class Author extends Person {
     private String penName;
     private static int count = 0;
     
